@@ -2,11 +2,13 @@ from bs4 import BeautifulSoup
 import requests
 import pandas as pd
 
+#Getting list of funds:
 fundList = requests.get('https://ibanka.seb.lv/cgi-bin/ipank/ipank.p?act=VPFOND')
 soup = BeautifulSoup(fundList.text, 'html.parser')
 
 isins = []
 
+#Listing all fund names and ISIN codes
 for tr in soup.find_all('tr'):
     if len(tr)>10 :
         fundName = tr.find_all('td')[1].text
@@ -16,6 +18,7 @@ for tr in soup.find_all('tr'):
 funds = pd.DataFrame(isins, columns=list(['Fund Name','ISIN']))
 print('List of ISINs and fund names gathered!\n')
 
+#Getting the prices for each ISIN
 prices = []
 for isin in isins:
     temp = []
@@ -40,6 +43,7 @@ for isin in isins:
         
     print('Prices for {} have been gathered!'.format(isin[0]))
 
+#Some basic data cleaning:
 print('\nCleaning prices...')
 for p in prices:
     p[3] = p[3].replace(']','')
@@ -55,6 +59,7 @@ gains = result.pct_change()
 correlations = gains.corr()
 riskSTD = gains.std()
 
+#Saving everything to one MS Excel file
 print('Saving data to MS Excel file')
 with pd.ExcelWriter('D:\Development\Python Projects\FONDI\SEB funds.xlsx') as pdExcel:
     result.to_excel(pdExcel, 'DATA')
